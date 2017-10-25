@@ -75,8 +75,7 @@ def isStateValid (state):
         return True
 
 def costOfState(state, numRowsRemoved):
-    return format(state, '09b').count('1') - \
-            10 * numRowsRemoved
+    return -1 * numRowsRemoved
 
 def possibleNextStates(state, piece):
     nextStates = []
