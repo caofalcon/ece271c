@@ -75,8 +75,7 @@ def isStateValid (state):
         return True
 
 def costOfState(state, numRowsRemoved):
-    return format(state, '09b').count('1') - \
-            10 * numRowsRemoved
+    return -1*numRowsRemoved
 
 def possibleNextStates(state, piece):
     nextStates = []
@@ -203,8 +202,8 @@ numRounds = 100
 sequencePattern = np.array([2, 0, 1])
 pieceSequence = np.tile(sequencePattern, 100)
 
-contPlan  = 100*np.ones((numRounds, 512), dtype=int)
-costToGo = 100*np.ones((numRounds, 512), dtype=int)
+contPlan  = np.zeros((numRounds, 512), dtype=int)
+costToGo = np.zeros((numRounds, 512), dtype=int)
 
 validStatesList = validStates
 
