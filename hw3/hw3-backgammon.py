@@ -123,6 +123,34 @@ for die1 in range(1,7):
 
 probMtx = np.load('probMtx.npy')
 
+for stage in range(NUM_ROUNDS-2, -1, -1):
+    for sIdx, state in enumerate(comboArr):
+        # expected value given best choice for each roll
+        # is sum(bestchoices) * 1/36
+        minValSum = 0
+        for rIdx, roll in enumerate(possibleRolls):
+            # choose the best choice for the roll
+            minVal = -1
+            for nextState in possibleNextStates(state, roll):
+                nIdx = np.searchsorted(comboArr, nextState)
+                if costToGo[stage+1][nIdx] < minVal \
+                        or minVal < 0:
+                    minVal = costToGo[stage+1][nIdx]
+                    contPlan[stage][sIdx][rIdx] = nextState
+            minValSum += minVal
+        if state == stateS:
+            costToGo[stage][sIdx] = float(minValSum) / 36
+        else:
+            costToGo[stage][sIdx] = 1 + float(minValSum) / 36
+    print('Stage #', stage, '\t', np.argmin(costToGo[stage,:]))
+
+np.save('bg-costToGo.npy', costToGo)
+np.save('bg-contPlan.npy', contPlan)
+
+#################################################################
+#
+#   Code for generating probMtx
+#
 # probMtx = np.zeros((3003, 3003), dtype=np.float)
 # 
 # for sIdx, state in enumerate(comboArr):
