@@ -67,6 +67,8 @@ for p_F20 in range(0, 19):
     phi_N = np.linalg.matrix_power(phi, 20)
     prob[p_F20] = phi_N[4, 7]
 
+print(prob)
+
 plt.plot(np.arange(9.5, step=0.5), prob)
 plt.ylabel('Probability of winning')
 plt.xlabel('p_F')
