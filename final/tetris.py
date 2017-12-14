@@ -1,4 +1,8 @@
 import numpy as np
+import random as rand
+
+def linearRatingFunction(r,w):
+    return np.dot(w,r)
 
 def isBoxEnclosed(maze, x, y):
     if maze[x,y] == 2:
@@ -61,7 +65,8 @@ def controlSpace(board, piece, orient):
         p = np.rot90(p)
 
     options = []
-    # Statistics
+
+    # Generate Statistics for Every Option
     for idx, tmp in enumerate(ctrl):
         board = np.copy(tmp)
         removedLines = 0
@@ -131,18 +136,20 @@ def controlSpace(board, piece, orient):
         options.append(
                 {
                     'board': board,
-                    'pileHeight': pileHeight,
-                    'holes': holes,
-                    'connectedHoles': connectedHoles,
-                    'removedLines': removedLines,
-                    'altitudeDifference': pileHeight - lowestOccupied,
-                    'maxWellDepth': maxWellDepth,
-                    'sumOfAllWells': sumOfAllWells,
-                    'landingHeight': landingHeightList[idx],
-                    'blocks': np.sum(board),
-                    'weightedBlocks': int(weightedBlocks),
-                    'columnTransitions': int(columnTransitions),
-                    'rowTransitions': int(rowTransitions)
+                    'statistics': [ 
+                        pileHeight, 
+                        holes,
+                        connectedHoles,
+                        removedLines,
+                        pileHeight - lowestOccupied,
+                        maxWellDepth,
+                        sumOfAllWells,
+                        landingHeightList[idx],
+                        np.sum(board),
+                        int(weightedBlocks),
+                        int(rowTransitions),
+                        int(columnTransitions)
+                        ]
                     }
                 )
 
@@ -176,29 +183,50 @@ orient[4] = 4
 orient[5] = 2
 orient[6] = 2
 
+w_L = np.array([-62709, -30271, 0, -48621, 35395, -12, -43810, 0, 0, -4041, -44262, -5832])
+
 board = np.zeros((14,8), dtype=int)
+totalLinesRemoved = 0
+roundsElapsed = 0
 
-'''
-maze = np.copy(board)
-maze[0:4,7] = 1
-maze[4,0:8] = 1
-maze[13,:] = maze[13,:] + 2*(maze[13,:] == 0)
-print(maze)
-print(isBoxEnclosed(maze, 0,6))
+gameBoards = []
+pieceOne = rand.randint(0,6)
 
-
-'''
-
-pileHeight = 0
 while(1):
-    ctrl = controlSpace(board, piece[0], orient[0])
-    for idx, option in enumerate(ctrl):
-        print('\nOption:', idx)
-        for val in option:
-            if val == 'board':
-                print(np.flip(option[val],axis=0))
-            else:
-                print(val, ': ', option[val])
-    idx = input()
-    board = ctrl[int(idx)]['board']
+    pieceTwo = rand.randint(0,6)
+    optionsOne = controlSpace(board, piece[pieceOne], orient[pieceOne])
+    if len(optionsOne) == 0:
+        print("Game was lost!")
+        break
+    rewards = np.zeros(len(optionsOne), dtype=int)
+
+    # Go two pieces deep
+    for idx1, option1 in enumerate(optionsOne):
+        optionsTwo = controlSpace(option1['board'], piece[pieceTwo], orient[pieceTwo])
+        if len(optionsTwo) == 0:
+            rewards1[idx1] = np.NINF
+            continue
+        rewards2 = np.zeros(len(optionsTwo), dtype=int)
+        for idx2, option2 in enumerate(optionsTwo):
+            rewards2[idx2] = linearRatingFunction(option2['statistics'], w_L)
+        rewards[idx1] = np.max(rewards2)
+
+    # idx = input()
+    # board = ctrl[int(idx)]['board']
+    board = optionsOne[np.argmax(rewards)]['board']
+    # totalLinesRemoved = totalLinesRemoved + ctrl[int(idx)]['removedLines']
+    totalLinesRemoved = totalLinesRemoved + optionsOne[np.argmax(rewards)]['statistics'][3]
+    print("Reward :", np.max(rewards))
+    print("Lines Removed :", totalLinesRemoved)
+    print("roundsElapsed :", roundsElapsed)
+
+    gameBoards.append(board)
+    if roundsElapsed % 10 == 0:
+        print(np.flip(board, 0))
+
+    pieceOne = pieceTwo
+    roundsElapsed = roundsElapsed + 1
+    
+np.array(gameBoards)
+np.save('tetrisGameSequence', gameBoards)
 
